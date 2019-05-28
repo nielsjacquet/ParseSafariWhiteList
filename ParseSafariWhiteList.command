@@ -35,8 +35,7 @@ echo CSVfile: $CSVfile
 CSVDir=$( dirname "${CSVfile}")
 echo CSVDir: $CSVDir
 CSVfile=${CSVfile%?}
-
-SRfile="$CSVDir/$SRname""_SecurityRestrictions.mobileconfig"
+SRfile="$CSVDir/$SRname""_SafariWhitelistProfile.mobileconfig"
 
 echo $SRfile
 
@@ -54,67 +53,32 @@ echo $UUID2
 
 ##put it in variable
 function parse {
-  while read Key Type	Value Recommended_Value	Requested_Value Priority
+  while read VAL title siteURL justavalue
    do
-     if [[ -z $Requested_Value ]]
-       then
-        echo Requested Value not Available
-        echo Original RV: $Requested_Value
-        Requested_Value="$Recommended_Value"
-        echo altered RV:  $Requested_Value
-     fi
+    echo VAL: $VAL
+    echo title: $title
+    echo URL: $siteURL
 
-     echo Key:                $Key
-     echo Type:               $Type
-     #echo Value:              $Value
-     echo Recommended_Value:  $Recommended_Value
-     echo Requested_Value:    $Requested_Value
-     #echo Priority:           $Priority
-
-  if [[ $Type = "string" ]]
+  if [[ $VAL = "REQ" ]]
     then
-      echo -e "<key>$Key</key>\n<$Type>$Requested_Value</$Type>" >> $SRfile
+      echo -e "<dict>" >> $SRfile
+      echo -e "<key>Title</key>" >> $SRfile
+      echo -e "<string>$title</string>" >> $SRfile
+      echo -e "<key>URL</key>" >> $SRfile
+      echo -e "<string>$siteURL</string>" >> $SRfile
+      echo -e "</dict>" >> $SRfile
    fi
-
-   if [[ $Type = "integer" ]]
-    then
-      echo -e "<key>$Key</key>\n<$Type>$Requested_Value</$Type>" >> $SRfile
-   fi
-
-   if [[ $Type = "real" ]]
-    then
-      echo -e "<key>$Key</key>\n<$Type>$Requested_Value</$Type>" >> $SRfile
-   fi
-
-   if [[ $Type = "boolean" ]]
-    then
-      echo -e "<key>$Key</key>" >> $SRfile
-      echo "<$Requested_Value/>" | tr "[:upper:]" "[:lower:]" >> $SRfile
-   fi
-
-   if [[ $Key = "insertPasswordPolicy" ]]
-    then
-     passwordPolicy
-   fi
-
-   if [[ $Type = "array of strings" ]]
-    then
-     echo -e "<key>$Key</key>\n<array>\n$Requested_Value\n</array>" >> $SRfile
-   fi
-
   echo ----------------------------------------------------------------------------------------
   done < $CSVfile
 }
+
 function printHeader {
   echo -e "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple Inc//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">" >> $SRfile
-  echo -e "<dict>\n<key>PayloadContent</key>\n<array>\n<dict>\n<key>PayloadDescription</key>\n<string>Configures restrictions</string>\n<key>PayloadDisplayName</key>\n<string>Restrictions</string>\n<key>PayloadIdentifier</key>\n<string>com.apple.applicationaccess.$UUID1</string>\n<key>PayloadType</key>\n<string>com.apple.applicationaccess</string>\n<key>PayloadUUID</key>\n<string>$UUID1</string>\n<key>PayloadVersion</key>\n<integer>1</integer>" >> $SRfile
+  echo -e "<dict>\n<key>PayloadVersion</key>\n<integer>1</integer>\n<key>PayloadUUID</key>\n<string>Ignored</string>\n<key>PayloadType</key>\n<string>Configuration</string>\n<key>PayloadIdentifier</key>\n<string>Ignored</string>\n<key>PayloadContent</key>\n<array>\n<dict>\n<key>AutoFilterEnabled</key>\n<false/>\n<key>FilterBrowsers</key>\n<true/>\n<key>FilterSockets</key>\n<true/>\n<key>FilterType</key>\n<string>BuiltIn</string>\n<key>PayloadDescription</key>\n<string>Configures content filtering settings</string>\n<key>PayloadDisplayName</key>\n<string>Web Content Filter</string>\n<key>PayloadIdentifier</key>\n<string>com.apple.webcontent-filter.myucb.myucb4me</string>\n<key>PayloadType</key>\n<string>com.apple.webcontent-filter</string>\n<key>PayloadUUID</key>\n<string>$UUID1</string>\n<key>PayloadVersion</key>\n<integer>1</integer>\n<key>WhitelistedBookmarks</key>\n<array>" >> $SRfile
 }
+
 function printFooter {
-  echo -e "</dict>\n</array>\n<key>PayloadDisplayName</key>\n<string>$SRname</string>\n<key>PayloadIdentifier</key>\n<string>$SRname</string>\n<key>PayloadRemovalDisallowed</key>\n<false/>\n<key>PayloadType</key>\n<string>Configuration</string>\n<key>PayloadUUID</key>\n<string>$UUID3</string>\n<key>PayloadVersion</key>\n<integer>1</integer>\n</dict>\n</plist>" >> $SRfile
-}
-function passwordPolicy {
-  echo -e "</dict>" >> $SRfile
-  echo -e "<dict>\n<key>PayloadDescription</key>\n<string>Configures passcode settings</string>\n<key>PayloadDisplayName</key>\n<string>Passcode</string>\n<key>PayloadIdentifier</key>\n<string>com.apple.applicationaccess.$SRname</string>\n<key>PayloadType</key>\n<string>com.apple.mobiledevice.passwordpolicy</string>\n<key>PayloadUUID</key>\n<string>$UUID2</string>\n<key>PayloadVersion</key>\n<integer>1</integer>" >> $SRfile
+  echo -e "</array>\n</dict>\n</array>\n</dict>\n</plist>" >> $SRfile
 }
 printHeader
 parse
