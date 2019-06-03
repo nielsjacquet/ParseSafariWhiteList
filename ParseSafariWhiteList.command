@@ -55,6 +55,7 @@ echo $UUID2
 function parse {
   while read VAL title siteURL justavalue
    do
+
     echo VAL: $VAL
     echo title: $title
     echo URL: $siteURL
